@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% block title %}Vuelos disponibles — Alas de las Américas{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="fw-bold mb-0">
+        {% if tipo == 'IDA_VUELTA' %}Ida y vuelta
+        {% elif tipo == 'MULTIDESTINO' %}Multidestino
+        {% else %}Vuelo de ida{% endif %}
+      </h2>
+      <span class="text-muted small">{{ pasajeros }} pasajero{{ pasajeros|pluralize }}</span>
+    </div>
+    <a href="{% url 'buscar_vuelos' %}" class="btn btn-outline-secondary btn-sm rounded-3">
+      &#8592; Nueva búsqueda
+    </a>
+  </div>
+
+  <form method="post" id="form-seleccion">
+    {% csrf_token %}
+    <input type="hidden" name="num_tramos" value="{{ num_tramos }}">
+    <input type="hidden" name="pasajeros"  value="{{ pasajeros }}">
+    <input type="hidden" name="tipo"       value="{{ tipo }}"> 
+
+    {% for tramo in tramos_resultados %}
+      <div class="mb-5">
+
+        <!-- Encabezado del tramo -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          {% if num_tramos > 1 %}
+            <span class="badge bg-primary rounded-pill px-3">Tramo {{ forloop.counter }}</span>
+          {% endif %}
+          <h5 class="mb-0 fw-semibold">
+            {{ tramo.origen.ciudad.nombre }}
+            <span class="text-muted fw-normal mx-1">→</span>
+            {{ tramo.destino.ciudad.nombre }}
+          </h5>
+          <span class="text-muted small">· {{ tramo.fecha }}</span>
+        </div>
+
+        <!-- Vuelos del tramo -->
+        {% if tramo.vuelos %}
+          {% for vuelo in tramo.vuelos %}
+            <div class="card border-0 shadow-sm rounded-4 mb-3"
+                 id="vuelo-card-{{ forloop.parentloop.counter0 }}-{{ vuelo.id }}">
+              <div class="card-body p-4">
+
+                <!-- Info del vuelo CON ESCALAS -->
+                <div class="d-flex align-items-center gap-3 gap-md-4 mb-3 flex-wrap">
+                  <!-- SALIDA -->
+                  <div class="text-center" style="min-width:70px;">
+                    <div class="fs-4 fw-bold">{{ vuelo.itinerario.hora_salida|time:"H:i" }}</div>
+                    <div class="fw-semibold small">{{ vuelo.itinerario.origen.codigo_iata }}</div>
+                  </div>
+
+                  <!-- LÍNEA DE TIEMPO CON ESCALAS -->
+                  <div class="flex-grow-1">
+                    {% if vuelo.itinerario.escalas.all %}
+                      <!-- VUELO CON ESCALAS -->
+                      <div class="d-flex align-items-center gap-1 mb-2 flex-wrap">
+                        <div style="height:2px;background:var(--bs-border-color);flex:1;min-width:20px;"></div>
+                        {% for escala in vuelo.itinerario.escalas.all|dictsort:"orden" %}
+                          <div class="text-center">
+                            <div class="badge bg-warning text-dark py-1 px-2 small" style="font-size:10px;">
+                              {{ escala.aeropuerto_escala.codigo_iata }} {{ escala.aeropuerto_escala.nombre }} <br>
+                              <strong>{{ escala.duracion_minutos }}m</strong>
+                            </div>
+                          </div>
+                          {% if not forloop.last %}
+                            <div style="height:2px;background:var(--bs-border-color);flex:1;min-width:20px;"></div>
+                          {% endif %}
+                        {% endfor %}
+                        <div style="height:2px;background:var(--bs-border-color);flex:1;min-width:20px;"></div>
+                      </div>
+                      <div class="text-muted small text-center">
+                        {{ vuelo.itinerario.duracion_minutos }} min total
+                        <span class="badge bg-warning text-dark ms-2">{{ vuelo.itinerario.escalas.count }} Escala{{ vuelo.itinerario.escalas.count|pluralize }}</span>
+                      </div>
+                    {% else %}
+                      <!-- VUELO DIRECTO -->
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <div style="height:2px;background:var(--bs-border-color);flex:1;"></div>
+                        <span style="font-size:18px;">✈</span>
+                        <div style="height:2px;background:var(--bs-border-color);flex:1;"></div>
+                      </div>
+                      <div class="text-muted small text-center">
+                        {{ vuelo.itinerario.duracion_minutos }} min
+                        <span class="badge bg-success text-white ms-2">Directo</span>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <!-- LLEGADA -->
+                  <div class="text-center" style="min-width:70px;">
+                    <div class="fs-4 fw-bold">{{ vuelo.itinerario.hora_llegada|time:"H:i" }}</div>
+                    <div class="fw-semibold small">{{ vuelo.itinerario.destino.codigo_iata }}</div>
+                  </div>
+
+                  <!-- INFO VUELO Y AERONAVE -->
+                  <div class="text-end d-none d-md-block">
+                    <div class="small">
+                      <strong>{{ vuelo.numero_vuelo }}</strong><br>
+                      <span class="text-muted">{{ vuelo.aeronave.modelo.nombre }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Tarifas — cada botón selecciona este vuelo+tarifa para el tramo -->
+                <div class="row g-3">
+                  {% for tarifa in vuelo.tarifas.all %}
+                    {% if tarifa.disponible %}
+                      <div class="col-6 col-md-3">
+                        <div class="border rounded-3 p-3 h-100 d-flex flex-column text-center tarifa-opcion
+                          {% if tarifa.clase.codigo == 'PRIMERA' %}border-warning
+                          {% elif tarifa.clase.codigo == 'EJECUTIVA' %}border-dark
+                          {% elif tarifa.clase.codigo == 'ECONOMICA_PREMIUM' %}border-info
+                          {% else %}border-secondary{% endif %}"
+                          data-tramo="{{ forloop.parentloop.parentloop.counter0 }}"
+                          data-vuelo="{{ vuelo.id }}"
+                          data-tarifa="{{ tarifa.id }}"
+                          style="cursor:pointer;">
+
+                          {% if tarifa.clase.codigo == 'PRIMERA' %}
+                            <span class="badge bg-warning text-dark mb-2">Primera Clase</span>
+                          {% elif tarifa.clase.codigo == 'EJECUTIVA' %}
+                            <span class="badge bg-dark mb-2">Ejecutiva</span>
+                          {% elif tarifa.clase.codigo == 'ECONOMICA_PREMIUM' %}
+                            <span class="badge bg-info text-dark mb-2">Eco. Premium</span>
+                          {% else %}
+                            <span class="badge bg-secondary mb-2">Económica</span>
+                          {% endif %}
+
+                          <div class="fs-4 fw-bold text-primary">${{ tarifa.precio|floatformat:0 }}</div>
+                          <div class="text-muted mb-2" style="font-size:11px;">por persona</div>
+
+                          <ul class="list-unstyled text-start mb-3" style="font-size:11px;">
+                            {% for p in tarifa.politicas_equipaje.all %}
+                              <li><span class="text-success">✓</span> {{ p.tipo_equipaje.nombre }}</li>
+                            {% empty %}
+                              <li class="text-muted">Sin equipaje incluido</li>
+                            {% endfor %}
+                            <li class="mt-1">
+                              {% if tarifa.seleccion_asiento_incluida %}
+                                <span class="text-success">✓</span> Asiento incluido
+                              {% else %}
+                                <span class="text-muted">+ ${{ tarifa.cargo_seleccion_asiento }} asiento</span>
+                              {% endif %}
+                            </li>
+                          </ul>
+
+                          <button type="button"
+                                  class="btn btn-sm btn-outline-primary rounded-2 mt-auto w-100 btn-elegir">
+                            Elegir →
+                          </button>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+                <!-- Indicador de selección -->
+                <div class="seleccion-info mt-3 d-none alert alert-success py-2 small mb-0"
+                     id="sel-{{ forloop.parentloop.counter0 }}-{{ vuelo.id }}">
+                  ✓ Seleccionado para el tramo {{ forloop.parentloop.counter }}
+                </div>
+
+              </div>
+            </div>
+          {% endfor %}
+
+        {% else %}
+          <div class="alert alert-warning rounded-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            No hay vuelos disponibles para
+            <strong>{{ tramo.origen.ciudad.nombre }} → {{ tramo.destino.ciudad.nombre }}</strong>
+            el {{ tramo.fecha }}.
+          </div>
+        {% endif %}
+
+      </div>
+    {% endfor %}
+
+    <!-- Hidden inputs que se llenan con JS -->
+    {% for tramo in tramos_resultados %}
+      <input type="hidden" name="vuelo_id_{{ forloop.counter0 }}"  id="inp-vuelo-{{ forloop.counter0 }}"  value="">
+      <input type="hidden" name="tarifa_id_{{ forloop.counter0 }}" id="inp-tarifa-{{ forloop.counter0 }}" value="">
+    {% endfor %}
+
+    <!-- Resumen de selección + botón continuar -->
+    <div class="card border-0 shadow-sm rounded-4 mt-4 d-none" id="resumen-card">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-3">Resumen de tu selección</h6>
+        <div id="resumen-lista" class="mb-3 small"></div>
+        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3">
+          Continuar con los datos de pasajeros →
+        </button>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+const NUM_TRAMOS = {{ num_tramos }};
+const selecciones = {};  // tramo → {vuelo, tarifa, precio, clase}
+
+document.querySelectorAll('.tarifa-opcion').forEach(card => {
+  card.addEventListener('click', function() {
+    const tramo  = parseInt(this.dataset.tramo);
+    const vuelo  = this.dataset.vuelo;
+    const tarifa = this.dataset.tarifa;
+    const precio = this.querySelector('.fs-4').textContent.trim();
+    const clase  = this.querySelector('.badge').textContent.trim();
+
+    // Deseleccionar anteriores del mismo tramo
+    document.querySelectorAll(`.tarifa-opcion[data-tramo="${tramo}"]`).forEach(c => {
+      c.classList.remove('border-primary', 'bg-primary-subtle');
+      c.querySelector('.btn-elegir').textContent = 'Elegir →';
+    });
+    document.querySelectorAll(`.seleccion-info`).forEach(el => {
+      if (el.id.startsWith(`sel-${tramo}-`)) el.classList.add('d-none');
+    });
+
+    // Marcar este
+    this.classList.add('border-primary', 'bg-primary-subtle');
+    this.querySelector('.btn-elegir').textContent = '✓ Seleccionado';
+    document.getElementById(`sel-${tramo}-${vuelo}`)?.classList.remove('d-none');
+
+    // Guardar
+    selecciones[tramo] = { vuelo, tarifa, precio, clase };
+    document.getElementById(`inp-vuelo-${tramo}`).value  = vuelo;
+    document.getElementById(`inp-tarifa-${tramo}`).value = tarifa;
+
+    actualizarResumen();
+  });
+});
+
+function actualizarResumen() {
+  const completo = Object.keys(selecciones).length === NUM_TRAMOS;
+  const card = document.getElementById('resumen-card');
+  const lista = document.getElementById('resumen-lista');
+
+  lista.innerHTML = Object.entries(selecciones).map(([t, s]) =>
+    `<div class="d-flex justify-content-between border-bottom py-1">
+      <span>Tramo ${parseInt(t)+1} — ${s.clase}</span>
+      <span class="fw-semibold">${s.precio} <span class="text-muted fw-normal">/ pax</span></span>
+    </div>`
+  ).join('');
+
+  if (completo) {
+    card.classList.remove('d-none');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    card.classList.add('d-none');
+  }
+}
+</script>
+{% endblock %}

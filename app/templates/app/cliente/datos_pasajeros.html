@@ -1,0 +1,509 @@
+{% extends 'base.html' %}
+{% block title %}Datos de pasajeros — Alas de las Américas{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  {% include 'app/cliente/_progreso.html' with paso_actual=3 pasos_lista=pasos_lista %}
+
+<p class="text-muted mb-4">
+  {% if tipo == 'IDA_VUELTA' %}Ida y vuelta
+  {% elif tipo == 'MULTIDESTINO' %}Multidestino ({{ tramos_info|length }} tramos)
+  {% else %}Solo ida{% endif %}
+  &middot; {{ num_tramos }} pasajeros
+</p>
+
+<!-- RESUMEN DE VUELOS CON ESCALAS -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+  <div class="card-body p-4">
+    <h6 class="fw-semibold mb-3">✈ Tu itinerario</h6>
+    {% for t in tramos_info %}
+      <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          {% if tramos_info|length > 1 %}
+            <span class="badge bg-primary rounded-pill small">Tramo {{ forloop.counter }}</span>
+          {% endif %}
+          <strong>{{ t.vuelo.numero_vuelo }}</strong>
+          <span class="text-muted">·</span>
+          <span>{{ t.vuelo.itinerario.origen.codigo_iata }}</span>
+          <span class="fw-bold">→</span>
+          <span>{{ t.vuelo.itinerario.destino.codigo_iata }}</span>
+        </div>
+
+        <!-- Horarios + escalas en una línea -->
+        <div class="small text-muted">
+          <span class="fw-semibold">{{ t.vuelo.itinerario.hora_salida|time:"H:i" }}</span>
+          {% if t.escalas %}
+            ✈
+            {% for escala in t.escalas %}
+              <span class="badge bg-warning text-dark" style="font-size:10px;">{{ escala.aeropuerto_escala.codigo_iata }} || {{ escala.aeropuerto_escala.nombre }} ({{ escala.duracion_minutos }}m)</span>
+              {% if not forloop.last %}✈{% endif %}
+            {% endfor %}
+            ✈
+          {% else %}
+            →
+          {% endif %}
+          <span class="fw-semibold">{{ t.vuelo.itinerario.hora_llegada|time:"H:i" }}</span>
+          <span class="ms-2 badge {% if t.escalas %}bg-warning text-dark{% else %}bg-success{% endif %}">
+            {% if t.escalas %}{{ t.escalas|length }} Escala{{ t.escalas|length|pluralize }}{% else %}Directo{% endif %}
+          </span>
+        </div>
+
+        <!-- Clase y precio -->
+        <div class="mt-2">
+          <span class="badge bg-info bg-opacity-10 text-info">{{ t.tarifa.clase.nombre }}</span>
+          <span class="text-muted small ms-2">USD ${{ t.tarifa.precio }} por pasajero</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+  <form method="post" id="form-pasajeros">
+    {% csrf_token %}
+
+    {% for form in forms %}
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white rounded-top-4 border-bottom px-4 pt-4 pb-3">
+      <h5 class="mb-0 fw-semibold">
+        Pasajero {{ forloop.counter }}
+        {% if forloop.first %}
+          <span class="badge bg-primary ms-2" style="font-size:.65rem;">Principal</span>
+        {% endif %}
+      </h5>
+    </div>
+    <div class="card-body p-4">
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <!-- Datos personales -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Nombre *</label>
+          {{ form.nombre }}
+          {% if form.nombre.errors %}<div class="text-danger small">{{ form.nombre.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold small">Apellido *</label>
+          {{ form.apellido }}
+          {% if form.apellido.errors %}<div class="text-danger small">{{ form.apellido.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Fecha de nacimiento *</label>
+          {{ form.fecha_nacimiento }}
+          {% if form.fecha_nacimiento.errors %}<div class="text-danger small">{{ form.fecha_nacimiento.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">N° de pasaporte *</label>
+          {{ form.numero_pasaporte }}
+          {% if form.numero_pasaporte.errors %}<div class="text-danger small">{{ form.numero_pasaporte.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold small">Nacionalidad *</label>
+          {{ form.nacionalidad }}
+          {% if form.nacionalidad.errors %}<div class="text-danger small">{{ form.nacionalidad.errors }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+  <label class="form-label fw-semibold small">Correo electrónico</label>
+  {{ form.email }}
+  {% if form.email.errors %}
+    <div class="text-danger small mt-1">
+      {% for error in form.email.errors %}
+        <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+<div class="col-md-6">
+  <label class="form-label fw-semibold small">Teléfono</label>
+  {{ form.telefono }}
+  {% if form.telefono.errors %}
+    <div class="text-danger small mt-1">{{ form.telefono.errors }}</div>
+  {% endif %}
+</div>
+      </div>
+
+      <!-- Selección de asiento por tramo -->
+      {% for tramo in tramos_info %}
+        <hr class="my-4">
+        <h6 class="fw-semibold mb-1">
+          ✈ Asiento — 
+          {% if tramos_info|length > 1 %}
+            <span class="badge bg-primary rounded-pill me-1">Tramo {{ forloop.counter }}</span>
+          {% endif %}
+          <span class="text-muted">{{ tramo.vuelo.itinerario.origen.codigo_iata }} → {{ tramo.vuelo.itinerario.destino.codigo_iata }}</span>
+          
+          <!-- Mostrar si tiene escalas -->
+          {% if tramo.escalas %}
+            <span class="badge bg-warning text-dark ms-1">{{ tramo.escalas|length }} Escala{{ tramo.escalas|length|pluralize }}</span>
+          {% else %}
+            <span class="badge bg-success ms-1">Directo</span>
+          {% endif %}
+          
+          {% if tramo.tarifa.seleccion_asiento_incluida %}
+            <span class="badge bg-success ms-1">Asiento incluido</span>
+          {% else %}
+            <span class="badge bg-secondary ms-1">+${{ tramo.tarifa.cargo_seleccion_asiento }} USD</span>
+          {% endif %}
+        </h6>
+        
+        <!-- Detalles de escalas si existen -->
+        {% if tramo.escalas %}
+          <div class="alert alert-info alert-sm mb-3" style="font-size:12px;">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>Escalas en este tramo:</strong>
+            {% for escala in tramo.escalas %}
+              {{ escala.aeropuerto_escala.codigo_iata }} || {{ escala.aeropuerto_escala.nombre }}
+              <span class="text-muted">({{ escala.duracion_minutos }} min)</span>
+              {% if not forloop.last %}<span class="mx-1">·</span>{% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        
+        <p class="text-muted small mb-3">Si no seleccionas, se asignará uno en el check-in.</p>
+
+        {# Hidden input para el asiento de este tramo para este pasajero #}
+        <input type="hidden"
+               name="asiento_tramo_{{ forloop.counter0 }}"
+               id="inp_asiento_t{{ forloop.counter0 }}_p{{ forloop.parentloop.counter0 }}"
+               value="">
+
+        {% if tramo.asientos %}
+          <div class="row g-3 align-items-start">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Elegir por tipo</label>
+              <select class="form-select asiento-select"
+                      data-pax="{{ forloop.parentloop.counter0 }}"
+                      data-tramo="{{ forloop.counter0 }}">
+                <option value="">— Sin preferencia —</option>
+                <optgroup label="Ventana (A / F)">
+                  {% for a in tramo.asientos %}{% if a.junto_ventana %}
+                    <option value="{{ a.id }}">Fila {{ a.fila }}{{ a.letra }}</option>
+                  {% endif %}{% endfor %}
+                </optgroup>
+                <optgroup label="Pasillo (C / D)">
+                  {% for a in tramo.asientos %}{% if a.junto_pasillo %}
+                    <option value="{{ a.id }}">Fila {{ a.fila }}{{ a.letra }}</option>
+                  {% endif %}{% endfor %}
+                </optgroup>
+                <optgroup label="Centro (B / E)">
+                  {% for a in tramo.asientos %}
+                    {% if not a.junto_ventana and not a.junto_pasillo %}
+                      <option value="{{ a.id }}">Fila {{ a.fila }}{{ a.letra }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </optgroup>
+              </select>
+
+              <div id="chip-t{{ forloop.counter0 }}-p{{ forloop.parentloop.counter0 }}"
+                   class="mt-3 d-none align-items-center gap-2 p-2 rounded-3"
+                   style="background:#e7f1ff;border:1px solid #b6d4fe;">
+                <span style="font-size:20px;">✈</span>
+                <div class="flex-grow-1">
+                  <div class="fw-bold text-primary small"
+                       id="chip-label-t{{ forloop.counter0 }}-p{{ forloop.parentloop.counter0 }}"></div>
+                  <div class="text-muted" style="font-size:11px;"
+                       id="chip-tipo-t{{ forloop.counter0 }}-p{{ forloop.parentloop.counter0 }}"></div>
+                </div>
+                <button type="button" class="btn-close btn-sm chip-close"
+                        data-tramo="{{ forloop.counter0 }}"
+                        data-pax="{{ forloop.parentloop.counter0 }}"
+                        style="font-size:10px;"></button>
+              </div>
+            </div>
+
+            <div class="col-md-8">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-semibold small mb-0">Mapa de cabina</label>
+                <div class="d-flex align-items-center gap-2">
+                  <button type="button" class="btn btn-sm btn-outline-secondary btn-prev"
+                          data-tramo="{{ forloop.counter0 }}"
+                          data-pax="{{ forloop.parentloop.counter0 }}" disabled>&#8592;</button>
+                  <span class="small text-muted page-info"
+                        data-tramo="{{ forloop.counter0 }}"
+                        data-pax="{{ forloop.parentloop.counter0 }}"></span>
+                  <button type="button" class="btn btn-sm btn-outline-secondary btn-next"
+                          data-tramo="{{ forloop.counter0 }}"
+                          data-pax="{{ forloop.parentloop.counter0 }}">&#8594;</button>
+                </div>
+              </div>
+              <div class="border rounded-3 bg-white p-3 text-center"
+                   id="mapa-t{{ forloop.counter0 }}-p{{ forloop.parentloop.counter0 }}"
+                   style="min-height:220px;">
+                <p class="text-muted small pt-4">Cargando...</p>
+              </div>
+              <div class="d-flex gap-3 mt-2 flex-wrap" style="font-size:11px;">
+                <span><span class="legd" style="background:#dbeafe;border-color:#3b82f6;"></span> Ventana</span>
+                <span><span class="legd" style="background:#dcfce7;border-color:#22c55e;"></span> Pasillo</span>
+                <span><span class="legd" style="background:#fef9c3;border-color:#eab308;"></span> Centro</span>
+                <span><span class="legd" style="background:#3b82f6;border-color:#1d4ed8;"></span> Seleccionado</span>
+              </div>
+            </div>
+          </div>
+
+        {% else %}
+          <div class="alert alert-secondary py-2 small">
+            <i class="bi bi-info-circle me-2"></i>
+            No hay asientos disponibles. Se asignará uno en el check-in.
+          </div>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+  </div>
+{% endfor %}
+
+    <div class="d-flex justify-content-between mt-2">
+  {% if url_volver %}
+    <a href="{{ url_volver }}" class="btn btn-outline-secondary rounded-3">&#8592; Volver</a>
+  {% else %}
+    <a href="{% url 'buscar_vuelos' %}" class="btn btn-outline-secondary rounded-3">&#8592; Volver</a>
+  {% endif %}
+  <button type="submit" class="btn btn-primary btn-lg rounded-3 px-5">Continuar &rarr;</button>
+</div>
+  </form>
+</div>
+
+<style>
+.legd {
+  display:inline-block; width:14px; height:14px;
+  border-radius:3px; border:1.5px solid; margin-right:4px; vertical-align:middle;
+}
+</style>
+<script>
+const ASIENTOS_GUARDADOS = {{ asientos_guardados|safe }};
+// Datos de asientos por tramo: ASIENTOS_TRAMO[ti] = [{id, fila, letra, ventana, pasillo}, ...]
+const ASIENTOS_TRAMO = {
+  {% for tramo in tramos_info %}
+  {{ forloop.counter0 }}: [
+    {% for a in tramo.asientos %}
+    { id:"{{ a.id }}", fila:{{ a.fila }}, letra:"{{ a.letra }}", ventana:{{ a.junto_ventana|lower }}, pasillo:{{ a.junto_pasillo|lower }} }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]{% if not forloop.last %},{% endif %}
+  {% endfor %}
+};
+
+const FPP    = 8;
+const LETRAS = ["A","B","C","D","E","F"];
+const COL    = {
+  ventana:{ f:"#dbeafe", s:"#3b82f6" },
+  pasillo:{ f:"#dcfce7", s:"#22c55e" },
+  centro: { f:"#fef9c3", s:"#eab308" },
+  sel:    { f:"#3b82f6", s:"#1d4ed8" }
+};
+
+// estado[ti][pi] = { pagina, totalPaginas, sel }
+const estado = {};
+
+function tipoAsiento(a){ return a.ventana?"ventana":a.pasillo?"pasillo":"centro"; }
+function tipoNombre(t){ return {ventana:"Ventana",pasillo:"Pasillo",centro:"Centro"}[t]; }
+function key(ti,pi){ return `${ti}-${pi}`; }
+
+function maxFila(ti){
+  const arr = ASIENTOS_TRAMO[ti] || [];
+  return arr.length ? Math.max(...arr.map(a=>a.fila)) : 0;
+}
+
+function init(ti, pi){
+  const mf = maxFila(ti);
+  if(!estado[ti]) estado[ti] = {};
+  const guardado = (ASIENTOS_GUARDADOS?.[pi] || [])[ti] || null;
+
+estado[ti][pi] = {
+  pagina: 0,
+  totalPaginas: Math.ceil(mf/FPP) || 1,
+  sel: guardado
+};
+
+// Si hay asiento guardado → mover a su página
+if (guardado) {
+  const a = (ASIENTOS_TRAMO[ti] || []).find(x => x.id == guardado);
+  if (a) {
+    estado[ti][pi].pagina = Math.floor((a.fila - 1) / FPP);
+    setInput(ti, pi, a.id);
+    setChip(ti, pi, a);
+
+    const sel = document.querySelector(`.asiento-select[data-tramo="${ti}"][data-pax="${pi}"]`);
+    if (sel) sel.value = a.id;
+  }
+}
+  render(ti, pi);
+}
+
+function render(ti, pi){
+  const st = estado[ti][pi];
+  const {pagina, totalPaginas, sel} = st;
+  const f0 = pagina*FPP+1, f1 = f0+FPP-1;
+  const mf = maxFila(ti);
+  const asientos = ASIENTOS_TRAMO[ti] || [];
+
+  document.querySelector(`.btn-prev[data-tramo="${ti}"][data-pax="${pi}"]`).disabled = pagina===0;
+  document.querySelector(`.btn-next[data-tramo="${ti}"][data-pax="${pi}"]`).disabled = pagina>=totalPaginas-1;
+  document.querySelector(`.page-info[data-tramo="${ti}"][data-pax="${pi}"]`).textContent =
+    `Filas ${f0}–${Math.min(f1,mf)} de ${mf}`;
+
+  const lote = asientos.filter(a=>a.fila>=f0&&a.fila<=f1);
+  const mapaDiv = document.getElementById(`mapa-t${ti}-p${pi}`);
+  mapaDiv.innerHTML="";
+
+  if(!lote.length){
+    mapaDiv.innerHTML='<p class="text-muted small pt-4">Sin asientos en esta sección.</p>';
+    return;
+  }
+
+  const filas=[...new Set(lote.map(a=>a.fila))].sort((a,b)=>a-b);
+  const NS="http://www.w3.org/2000/svg";
+  const C=44, PAD=40, TOTAL_COLS=7;
+  const W=PAD+TOTAL_COLS*C+8, H=(filas.length+1)*C+20;
+
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("width","100%");
+  svg.style.maxWidth="360px";
+  svg.style.display="block";
+  svg.style.margin="0 auto";
+
+  LETRAS.forEach((l,i)=>{
+    const col=i<3?i:i+1;
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",PAD+col*C+C/2); t.setAttribute("y",18);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("font-size","12");
+    t.setAttribute("font-weight","bold"); t.setAttribute("fill","#000");
+    t.textContent=l; svg.appendChild(t);
+  });
+
+  const lx=PAD+3*C+10;
+  const ln=document.createElementNS(NS,"line");
+  ln.setAttribute("x1",lx); ln.setAttribute("y1",24);
+  ln.setAttribute("x2",lx); ln.setAttribute("y2",H-4);
+  ln.setAttribute("stroke","#e5e7eb"); ln.setAttribute("stroke-width","2");
+  ln.setAttribute("stroke-dasharray","4 4");
+  svg.appendChild(ln);
+
+  const mp={};
+  lote.forEach(a=>{ if(!mp[a.fila])mp[a.fila]={}; mp[a.fila][a.letra]=a; });
+
+  filas.forEach((fila,ri)=>{
+    const y=(ri+1)*C+4;
+    const tf=document.createElementNS(NS,"text");
+    tf.setAttribute("x",PAD-6); tf.setAttribute("y",y+C/2+4);
+    tf.setAttribute("text-anchor","end"); tf.setAttribute("font-size","11");
+    tf.setAttribute("fill","#060607"); tf.textContent=fila;
+    svg.appendChild(tf);
+
+    LETRAS.forEach((letra,li)=>{
+      const col=li<3?li:li+1;
+      const x=PAD+col*C;
+      const a=mp[fila]?.[letra];
+      if(!a){
+        const r=document.createElementNS(NS,"rect");
+        r.setAttribute("x",x+3); r.setAttribute("y",y+3);
+        r.setAttribute("width",C-6); r.setAttribute("height",C-6);
+        r.setAttribute("rx","6"); r.setAttribute("fill","#f3f4f6");
+        r.setAttribute("stroke","#e5e7eb"); r.setAttribute("stroke-width","1");
+        svg.appendChild(r); return;
+      }
+      const isSel=sel===a.id;
+      const c=isSel?COL.sel:COL[tipoAsiento(a)];
+      const g=document.createElementNS(NS,"g");
+      g.style.cursor="pointer";
+      const r=document.createElementNS(NS,"rect");
+      r.setAttribute("x",x+3); r.setAttribute("y",y+3);
+      r.setAttribute("width",C-6); r.setAttribute("height",C-6);
+      r.setAttribute("rx","6"); r.setAttribute("fill",c.f);
+      r.setAttribute("stroke",c.s); r.setAttribute("stroke-width","2");
+      g.appendChild(r);
+      const tl=document.createElementNS(NS,"text");
+      tl.setAttribute("x",x+C/2); tl.setAttribute("y",y+C/2+4);
+      tl.setAttribute("text-anchor","middle"); tl.setAttribute("font-size","11");
+      tl.setAttribute("font-weight","600");
+      tl.setAttribute("fill",isSel?"#fff":"#374151");
+      tl.setAttribute("pointer-events","none");
+      tl.textContent=letra; g.appendChild(tl);
+      g.addEventListener("click",()=>elegir(ti,pi,a));
+      svg.appendChild(g);
+    });
+  });
+
+  mapaDiv.appendChild(svg);
+}
+
+function elegir(ti, pi, a){
+  const st = estado[ti][pi];
+  if(st.sel===a.id){
+    st.sel=null;
+    setInput(ti,pi,""); setChip(ti,pi,null);
+    const s=document.querySelector(`.asiento-select[data-tramo="${ti}"][data-pax="${pi}"]`);
+    if(s)s.value="";
+  } else {
+    st.sel=a.id;
+    setInput(ti,pi,a.id); setChip(ti,pi,a);
+    const s=document.querySelector(`.asiento-select[data-tramo="${ti}"][data-pax="${pi}"]`);
+    if(s)s.value=a.id;
+  }
+  render(ti,pi);
+}
+
+function setInput(ti, pi, val){
+  // Para el primer tramo del primer pasajero, también actualiza el campo hidden del form
+  const inp = document.getElementById(`inp_asiento_t${ti}_p${pi}`);
+  if(inp) inp.value=val;
+}
+
+function setChip(ti, pi, a){
+  const chip=document.getElementById(`chip-t${ti}-p${pi}`);
+  const lbl=document.getElementById(`chip-label-t${ti}-p${pi}`);
+  const tp=document.getElementById(`chip-tipo-t${ti}-p${pi}`);
+  if(!chip)return;
+  if(!a){ chip.classList.add("d-none"); chip.classList.remove("d-flex"); return; }
+  lbl.textContent=`Fila ${a.fila}${a.letra}`;
+  tp.textContent=tipoNombre(tipoAsiento(a));
+  chip.classList.remove("d-none"); chip.classList.add("d-flex");
+}
+
+
+document.addEventListener("DOMContentLoaded",()=>{
+  // Inicializar todos los mapas
+  document.querySelectorAll(".asiento-select").forEach(sel=>{
+    const ti=parseInt(sel.dataset.tramo);
+    const pi=parseInt(sel.dataset.pax);
+    init(ti,pi);
+
+    sel.addEventListener("change",function(){
+      const id=this.value;
+      if(!id){
+        estado[ti][pi].sel=null; setInput(ti,pi,""); setChip(ti,pi,null);
+      } else {
+        const a=(ASIENTOS_TRAMO[ti]||[]).find(x=>x.id===id);
+        if(a){
+          estado[ti][pi].sel=id;
+          estado[ti][pi].pagina=Math.floor((a.fila-1)/FPP);
+          setInput(ti,pi,id); setChip(ti,pi,a);
+        }
+      }
+      render(ti,pi);
+    });
+  });
+
+  document.querySelectorAll(".btn-prev").forEach(b=>b.addEventListener("click",()=>{
+    const ti=parseInt(b.dataset.tramo), pi=parseInt(b.dataset.pax);
+    if(estado[ti][pi].pagina>0){ estado[ti][pi].pagina--; render(ti,pi); }
+  }));
+
+  document.querySelectorAll(".btn-next").forEach(b=>b.addEventListener("click",()=>{
+    const ti=parseInt(b.dataset.tramo), pi=parseInt(b.dataset.pax);
+    if(estado[ti][pi].pagina<estado[ti][pi].totalPaginas-1){ estado[ti][pi].pagina++; render(ti,pi); }
+  }));
+
+  document.querySelectorAll(".chip-close").forEach(b=>b.addEventListener("click",()=>{
+    const ti=parseInt(b.dataset.tramo), pi=parseInt(b.dataset.pax);
+    estado[ti][pi].sel=null; setInput(ti,pi,""); setChip(ti,pi,null);
+    const s=document.querySelector(`.asiento-select[data-tramo="${ti}"][data-pax="${pi}"]`);
+    if(s)s.value="";
+    render(ti,pi);
+  }));
+});
+</script>
+{% endblock %}

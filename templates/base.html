@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Alas de las Américas{% endblock %}</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+  <style>
+    
+    /* Estilo para las Tabs */
+    .nav-tabs-aa {
+        border-bottom: 2px solid #e9ecef;
+        gap: 1rem;
+    }
+
+    .nav-tabs-aa .nav-link {
+        border: none;
+        color: #6c757d;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        border-bottom: 3px solid transparent;
+    }
+
+    .nav-tabs-aa .nav-link:hover {
+        color: var(--aa-azul);
+        background: rgba(0, 53, 128, 0.05);
+    }
+
+    .nav-tabs-aa .nav-link.active {
+        color: var(--aa-azul);
+        background: none;
+        border-bottom-color: var(--aa-dorado);
+    }
+
+    /* Badge para códigos ISO/IATA */
+    .code-badge {
+        font-family: 'Monaco', 'Consolas', monospace;
+        background-color: #f8f9fa;
+        color: var(--aa-azul-claro);
+        border: 1px solid #dee2e6;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .config-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .config-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--aa-dorado);
+    }
+
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        background: rgba(0, 53, 128, 0.05);
+        color: var(--aa-azul);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .config-card:hover .icon-box {
+        background: var(--aa-azul);
+        color: #fff;
+    }
+
+    .card-arrow {
+        color: var(--aa-dorado);
+        opacity: 0;
+        transition: all 0.3s ease;
+        transform: translateX(-10px);
+    }
+
+    .config-card:hover .card-arrow {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    :root {
+      --aa-azul: #003580;
+      --aa-azul-claro: #0057b8;
+      --aa-dorado: #f5a623;
+      --aa-gris: #f4f6f9;
+    }
+
+    body {
+      background-color: var(--aa-gris);
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* ── Navbar ── */
+    .navbar-aa {
+      background: linear-gradient(90deg, var(--aa-azul) 0%, var(--aa-azul-claro) 100%);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+    }
+
+    .navbar-aa .navbar-brand {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #fff !important;
+      letter-spacing: .5px;
+    }
+
+    .navbar-aa .navbar-brand span { color: var(--aa-dorado); }
+    .navbar-aa .nav-link {
+      color: rgba(255, 255, 255, .85) !important;
+      font-size: .92rem;
+      transition: color .2s;
+    }
+    .navbar-aa .nav-link:hover,
+    .navbar-aa .nav-link.active { color: var(--aa-dorado) !important; }
+    .navbar-aa .nav-link i { margin-right: 4px; }
+
+    /* ── Page header ── */
+    .page-header {
+      background: linear-gradient(135deg, var(--aa-azul) 0%, var(--aa-azul-claro) 60%, #0080ff 100%);
+      color: #fff;
+      padding: 2.5rem 0 2rem;
+      margin-bottom: 2rem;
+    }
+    .page-header h1 { font-weight: 700; font-size: 1.8rem; }
+    .page-header p  { opacity: .85; margin-bottom: 0; }
+
+    /* ── Cards ── */
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, .07);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+    }
+    .card-header-aa {
+      background: linear-gradient(90deg, var(--aa-azul) 0%, var(--aa-azul-claro) 100%);
+      color: #fff;
+      border-radius: 12px 12px 0 0 !important;
+      font-weight: 600;
+      padding: .85rem 1.25rem;
+    }
+
+    /* ── Stat cards ── */
+    .stat-card { border-left: 5px solid var(--aa-azul-claro); }
+    .stat-card .stat-icon   { font-size: 2.2rem; color: var(--aa-azul-claro); opacity: .8; }
+    .stat-card .stat-number { font-size: 2rem; font-weight: 700; color: var(--aa-azul); }
+    .stat-card .stat-label  { font-size: .82rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── Buttons ── */
+    .btn-aa       { background-color: var(--aa-azul);   color: #fff; border: none; border-radius: 8px; }
+    .btn-aa:hover { background-color: var(--aa-azul-claro); color: #fff; }
+    .btn-aa-gold       { background-color: var(--aa-dorado); color: #fff; border: none; border-radius: 8px; }
+    .btn-aa-gold:hover { background-color: #d4891a; color: #fff; }
+
+    /* ── Tables ── */
+    .table thead th {
+      background-color: var(--aa-azul);
+      color: #fff;
+      font-weight: 600;
+      font-size: .88rem;
+      border: none;
+    }
+    .table tbody tr:hover { background-color: #e8f0fb; }
+
+    /* ── Badges estado ── */
+    .badge-programado { background-color: #0057b8; }
+    .badge-confirmada { background-color: #198754; }
+    .badge-cancelado  { background-color: #dc3545; }
+    .badge-pendiente  { background-color: #ffc107; color: #000; }
+    .badge-completada { background-color: #6c757d; }
+
+    /* ── Footer ── */
+    .footer-aa {
+      background: var(--aa-azul);
+      color: rgba(255, 255, 255, .7);
+      font-size: .82rem;
+      padding: 1.2rem 0;
+      margin-top: 3rem;
+    }
+    .footer-aa a { color: var(--aa-dorado); text-decoration: none; }
+
+    /* ── Alerts ── */
+    .alert { border-radius: 10px; border: none; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar       { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: var(--aa-azul-claro); border-radius: 3px; }
+
+    
+  /* Estilos para ocultar checkboxes DELETE */
+  input[name$="-DELETE"] {
+    display: none;
+  }
+
+  /* Fila marcada para eliminar */
+  .row-deleted {
+    opacity: 0.5;
+    background-color: #f8d7da !important;
+  }
+
+  .row-deleted input,
+  .row-deleted select {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  /* 1. Resetear el estilo de Bootstrap para poder aplicar el nuestro */
+  .form-check-input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: none !important; /* Quita el check azul de Bootstrap */
+    background-color: #ffffff !important;
+    border: 2px solid #000000 !important; /* Tu borde negro solicitado */
+    width: 1.25em;
+    height: 1.25em;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  /* 2. Estilo cuando está Marcado (Checked) */
+  .form-check-input:checked {
+    background-color: #0d6efd !important; /* Azul primario */
+    border-color: #0d6efd !important;
+  }
+
+  /* 3. Crear el check blanco manual (porque quitamos el de Bootstrap) */
+  .form-check-input:checked::after {
+    content: "";
+    position: absolute;
+    left: 25%;
+    top: 5%;
+    width: 40%;
+    height: 70%;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+  }
+
+  /* 4. Efecto Hover */
+  .form-check-input:hover {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.5) !important;
+  }
+  /* Mejorar apariencia de inputs en tabla */
+  .table input[type="text"],
+  .table input[type="number"],
+  .table input[type="email"],
+  .table select {
+    font-size: 0.95rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .table .form-check-input {
+    width: 1.25em;
+    height: 1.25em;
+    margin-top: 0.125em;
+  }
+
+  /* Botones de eliminar */
+  .delete-row-btn {
+    transition: all 0.2s;
+  }
+
+  .delete-row-btn:hover {
+    background-color: #dc3545 !important;
+    color: white !important;
+  }
+
+  /* Validación visual */
+  .table input.is-invalid,
+  .table select.is-invalid {
+    border-color: #dc3545;
+  }
+
+  /* Responsividad */
+  @media (max-width: 768px) {
+    .table-responsive {
+      font-size: 0.9rem;
+    }
+    .table th, .table td {
+      padding: 0.6rem 0.4rem;
+    }
+  }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- ══════════════ NAVBAR ══════════════ -->
+  <nav class="navbar navbar-expand-lg navbar-aa sticky-top">
+    <div class="container">
+
+      <a class="navbar-brand" href="{% url 'index' %}">
+        <i class="bi bi-airplane-fill me-2"></i>Alas de las <span>Américas</span>
+      </a>
+
+      <button class="navbar-toggler border-0" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto gap-1 align-items-lg-center">
+
+          <!-- Inicio -->
+          <li class="nav-item">
+            <a class="nav-link {% block nav_inicio %}{% endblock %}" href="{% url 'index' %}">
+              <i class="bi bi-house-door"></i>Inicio
+            </a>
+          </li>
+
+          <!-- Buscar vuelos (público) -->
+          <li class="nav-item">
+            <a class="nav-link {% block nav_vuelos %}{% endblock %}" href="{% url 'buscar_vuelos' %}">
+              <i class="bi bi-search"></i>Buscar vuelos
+            </a>
+          </li>
+
+          <!-- Panel Admin -->
+          <li class="nav-item">
+            <a class="nav-link text-warning fw-bold"
+               href="{% url "panel_configuracion" %}">
+              <i class="bi bi-shield-lock"></i>Admin
+            </a>
+          </li>
+      </div>
+    </div>
+  </nav>
+  <!-- ══════════════ FIN NAVBAR ══════════════ -->
+
+
+  <!-- ══════════════ MENSAJES ══════════════ -->
+  {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      <i class="bi bi-info-circle me-2"></i>{{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+
+  <!-- ══════════════ CONTENIDO ══════════════ -->
+  {% block content %}{% endblock %}
+
+
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <footer class="footer-aa text-center">
+    <div class="container">
+      <i class="bi bi-airplane-fill me-2"></i>
+      <strong style="color:#fff">Alas de las Américas</strong> &copy; 2025
+      &nbsp;|&nbsp; Sistema de Reservas de Vuelos &nbsp;|&nbsp;
+      Desarrollado con <a href="https://www.djangoproject.com/" target="_blank">Django</a>
+      &amp; <a href="https://getbootstrap.com/" target="_blank">Bootstrap</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

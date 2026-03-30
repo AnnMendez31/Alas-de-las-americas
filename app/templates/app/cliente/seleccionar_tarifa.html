@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Seleccionar tarifa — Alas de las Américas{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Barra de progreso -->
+  {% include 'app/cliente/_progreso.html' with paso=2 %}
+
+  <h2 class="fw-bold mb-1 mt-4">Elige tu tarifa</h2>
+  <p class="text-muted mb-4">
+    Vuelo {{ vuelo.numero_vuelo }} &middot;
+    {{ vuelo.itinerario.origen.codigo_iata }} &rarr; {{ vuelo.itinerario.destino.codigo_iata }} &middot;
+    {{ vuelo.fecha_salida }}
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="pasajeros" value="{{ pasajeros }}">
+
+    <div class="row g-4">
+      {% for tarifa in tarifas %}
+        <div class="col-md-6 col-xl-3">
+          <label class="h-100 d-block" style="cursor:pointer;">
+            <input type="radio" name="tarifa_id" value="{{ tarifa.id }}"
+                   class="visually-hidden tarifa-radio" required>
+            <div class="card h-100 border-2 rounded-4 tarifa-card p-3">
+
+              <!-- Badge de clase -->
+              <div class="mb-3">
+                {% if tarifa.clase.codigo == 'PRIMERA' %}
+                  <span class="badge bg-warning text-dark">Primera Clase</span>
+                {% elif tarifa.clase.codigo == 'EJECUTIVA' %}
+                  <span class="badge bg-dark">Ejecutiva</span>
+                {% elif tarifa.clase.codigo == 'ECONOMICA_PREMIUM' %}
+                  <span class="badge bg-info text-dark">Eco. Premium</span>
+                {% else %}
+                  <span class="badge bg-secondary">Económica</span>
+                {% endif %}
+              </div>
+
+              <!-- Precio -->
+              <div class="mb-3">
+                <span class="fs-2 fw-bold text-primary">${{ tarifa.precio|floatformat:0 }}</span>
+                <span class="text-muted small"> / por persona</span>
+                {% if pasajeros > 1 %}
+                  <div class="text-muted small">
+                    Total: ${{ tarifa.precio|floatformat:0 }} × {{ pasajeros }} pax
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Beneficios -->
+              <ul class="list-unstyled small mb-3">
+                {% for politica in tarifa.politicas_equipaje.all %}
+                  <li class="mb-1">
+                    <span class="text-success me-1">&#10003;</span>
+                    {{ politica.tipo_equipaje.nombre }}
+                    ({{ politica.cantidad_maxima }}x, hasta {{ politica.peso_maximo_kg }}kg)
+                  </li>
+                {% empty %}
+                  <li class="text-muted">Sin equipaje incluido</li>
+                {% endfor %}
+
+                <li class="mb-1 mt-2">
+                  {% if tarifa.seleccion_asiento_incluida %}
+                    <span class="text-success me-1">&#10003;</span> Selección de asiento incluida
+                  {% else %}
+                    <span class="text-muted me-1">&#43;</span>
+                    Selección de asiento: ${{ tarifa.cargo_seleccion_asiento }}
+                  {% endif %}
+                </li>
+              </ul>
+
+              <div class="mt-auto text-center">
+                <div class="seleccionado-badge d-none badge bg-primary py-2 px-3">
+                  &#10003; Seleccionada
+                </div>
+              </div>
+
+            </div>
+          </label>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <p class="text-muted">No hay tarifas disponibles para este vuelo.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-3">
+  &#8592; Volver
+</a>
+      <button type="submit" class="btn btn-primary btn-lg rounded-3 px-5">
+        Continuar &rarr;
+      </button>
+    </div>
+  </form>
+
+</div>
+
+<style>
+  .tarifa-card { transition: border-color .15s, box-shadow .15s; border-color: var(--bs-border-color); }
+  .tarifa-card:hover { border-color: var(--bs-primary); box-shadow: 0 0 0 3px rgba(13,110,253,.12); }
+  .tarifa-radio:checked + .tarifa-card { border-color: var(--bs-primary); box-shadow: 0 0 0 3px rgba(13,110,253,.2); }
+  .tarifa-radio:checked + .tarifa-card .seleccionado-badge { display: inline-block !important; }
+</style>
+{% endblock %}

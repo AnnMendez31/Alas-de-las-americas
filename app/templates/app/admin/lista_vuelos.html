@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Vuelos — Alas de las Américas{% endblock %}
+
+{% block content %}
+<div class="page-header shadow-sm bg-primary text-white py-4 mb-4">
+    <div class="container">
+         <div class="m-4">
+      <a href="{% url 'panel_configuracion' %}" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+
+
+
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1><i class="bi bi-airplane-engines me-2"></i>Gestión de Vuelos</h1>
+                <p class="lead mb-0">Control de operaciones aéreas y estados de vuelo.</p>
+            </div>
+            <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'crear_vuelo' %}" class="btn btn-warning fw-bold px-4 shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Programar Vuelo
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 text-secondary fw-bold">
+            <i class="bi bi-list-check me-2"></i>Vuelos en Sistema
+            <span class="badge rounded-pill bg-primary ms-2">{{ vuelos|length }}</span>
+        </h5>
+    </div>
+
+    <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">Vuelo / Fecha</th>
+                        <th>Ruta e Itinerario</th>
+                        <th>Aeronave</th>
+                        <th>Estado</th>
+                        <th>Tarifas (Desde)</th>
+                        <th class="text-center pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vuelos %}
+                    <tr class="border-bottom">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary p-2 rounded me-3 text-center"
+                                    style="min-width: 50px;">
+                                    <span class="d-block fw-bold">{{ v.fecha_salida|date:"d" }}</span>
+                                    <span class="small text-uppercase">{{ v.fecha_salida|date:"M" }}</span>
+                                </div>
+                                <div>
+                                    <span class="fw-bold text-dark d-block">{{ v.numero_vuelo }}</span>
+                                    <span class="text-muted small">{{ v.itinerario.periodo.get_codigo_display }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">
+                                    {{ v.itinerario.origen.codigo_iata }}
+                                    <i class="bi bi-arrow-right text-warning mx-1"></i>
+                                    {{ v.itinerario.destino.codigo_iata }}
+                                </span>
+                                <small class="text-muted">
+                                    {{ v.itinerario.hora_salida|time:"H:i" }} — {{ v.itinerario.hora_llegada|time:"H:i"}}
+                                </small>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-airplane me-2 text-secondary"></i>
+                                <div>
+                                    <span class="d-block small fw-bold">{{ v.aeronave.matricula }}</span>
+                                    <span class="text-muted extra-small" style="font-size: 0.75rem;">{{ v.aeronave.modelo.nombre }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if v.estado == 'PROGRAMADO' %}
+                            <span class="badge bg-info text-dark text-opacity-75">Programado</span>
+                            {% elif v.estado == 'EN_VUELO' %}
+                            <span class="badge bg-primary">En Vuelo <i class="bi bi-broadcast pulse"></i></span>
+                            {% elif v.estado == 'ATERRIZADO' %}
+                            <span class="badge bg-success">Aterrizado</span>
+                            {% elif v.estado == 'CANCELADO' %}
+                            <span class="badge bg-danger">Cancelado</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ v.get_estado_display }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% with tarifa_min=v.tarifas.all|dictsort:"precio"|first %}
+                                {% if tarifa_min %}
+                                    <span class="text-dark fw-bold">{{ tarifa_min.precio }} {{ tarifa_min.moneda }}</span>
+                                    <br><small class="text-muted">{{ tarifa_min.clase.nombre }}</small>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark extra-small">Sin tarifas</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+
+                        <td class="text-center pe-4">
+                            <div class="btn-group shadow-sm">
+                                <a href="{% url 'gestionar_tarifas' v.pk %}" class="btn btn-sm btn-outline-success" title="Gestionar Tarifas">
+                                    <i class="bi bi-cash-stack"></i>
+                                </a>
+                                <a href="{% url 'editar_vuelo' v.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'eliminar_vuelo' v.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                <a href="{% url 'detalle_vuelo' v.pk %}" 
+   class="btn btn-sm btn-outline-dark" 
+   title="Ver detalle">
+    <i class="bi bi-eye"></i>
+</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-airplane text-muted opacity-25" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No hay vuelos programados actualmente.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.6rem;
+    }
+
+    .bg-opacity-10 {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    /* Animación simple para el icono de transmisión */
+    .pulse {
+        animation: pulse-animation 2s infinite;
+    }
+    @keyframes pulse-animation {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}

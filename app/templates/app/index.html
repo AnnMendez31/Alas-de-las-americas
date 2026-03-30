@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio — Alas de las Américas{% endblock %}
+{% block nav_inicio %}active{% endblock %}
+
+{% block content %}
+
+<!-- ══════ PAGE HEADER ══════ -->
+<div class="page-header">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1><i class="bi bi-airplane-engines me-2"></i>Panel de Control</h1>
+        <p>Sistema de Gestión de Reservas — Compañía de Aviación Alas de las Américas</p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'buscar_vuelos' %}" class="btn btn-aa-gold fw-semibold">
+          <i class="bi bi-plus-circle me-2"></i>Nueva Reserva
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="container pb-5">
+
+  <!-- ══════ STAT CARDS ══════ -->
+  <div class="row g-4 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card h-100 p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="stat-number">{{ total_vuelos|default:"0" }}</div>
+            <div class="stat-label">Vuelos activos</div>
+          </div>
+          <i class="bi bi-airplane stat-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card h-100 p-3" style="border-left-color:#198754">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="stat-number" style="color:#198754">{{ total_reservas|default:"0" }}</div>
+            <div class="stat-label">Reservas totales</div>
+          </div>
+          <i class="bi bi-ticket-perforated stat-icon" style="color:#198754"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'lista_pasajeros' %}" class="text-decoration-none">
+        <div class="card stat-card h-100 p-3" style="border-left-color:#f5a623">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="stat-number" style="color:#f5a623">{{ total_pasajeros|default:"0" }}</div>
+              <div class="stat-label">Pasajeros registrados</div>
+            </div>
+            <i class="bi bi-people stat-icon" style="color:#f5a623"></i>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'lista_aeronaves' %}" class="text-decoration-none">
+        <div class="card stat-card h-100 p-3" style="border-left-color:#6f42c1">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="stat-number" style="color:#6f42c1">{{ total_aeronaves|default:"0" }}</div>
+              <div class="stat-label">Aeronaves en flota</div>
+            </div>
+            <i class="bi bi-send stat-icon" style="color:#6f42c1"></i>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+  <!-- ══════ FIN STAT CARDS ══════ -->
+
+
+  <div class="row g-4">
+
+    <!-- ══════ ÚLTIMAS RESERVAS ══════ -->
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header-aa d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-ticket-perforated me-2"></i>Últimas Reservas</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Cliente</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for reserva in ultimas_reservas %}
+                <tr>
+                  <td><span class="fw-bold text-primary">{{ reserva.codigo_reserva }}</span></td>
+                  <td>
+    <div class="fw-bold">{{ reserva.cliente.nombre }} {{ reserva.cliente.apellido }}</div>
+    <div class="text-muted small">
+        <i class="bi bi-envelope-at me-1"></i>{{ reserva.cliente.email }}
+    </div>
+</td>
+                  <td><span class="badge bg-secondary">{{ reserva.get_tipo_display }}</span></td>
+                  <td>
+                    {% if reserva.estado == 'CONFIRMADA' %}
+                      <span class="badge badge-confirmada">Confirmada</span>
+                    {% elif reserva.estado == 'PENDIENTE' %}
+                      <span class="badge badge-pendiente">Pendiente</span>
+                    {% elif reserva.estado == 'CANCELADA' %}
+                      <span class="badge badge-cancelado">Cancelada</span>
+                    {% else %}
+                      <span class="badge badge-completada">Completada</span>
+                    {% endif %}
+                  </td>
+                  <td class="fw-semibold">${{ reserva.precio_total }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                    No hay reservas registradas aún.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════ COLUMNA DERECHA ══════ -->
+    <div class="col-lg-4 d-flex flex-column gap-4">
+
+      <!-- Próximos vuelos -->
+      <div class="card">
+        <div class="card-header-aa">
+          <i class="bi bi-calendar-week me-2"></i>Próximos Vuelos
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for vuelo in proximos_vuelos %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-bold text-primary">{{ vuelo.numero_vuelo }}</span>
+              <div class="text-muted small">
+                {{ vuelo.itinerario.origen.codigo_iata }}
+                <i class="bi bi-arrow-right mx-1"></i>
+                {{ vuelo.itinerario.destino.codigo_iata }}
+              </div>
+            </div>
+            <div class="text-end">
+              <div class="small fw-semibold">{{ vuelo.fecha_salida }}</div>
+              <span class="badge badge-programado">{{ vuelo.get_estado_display }}</span>
+            </div>
+          </li>
+          {% empty %}
+          <li class="list-group-item text-center text-muted py-3">
+            <i class="bi bi-calendar-x me-2"></i>Sin vuelos próximos
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Accesos rápidos -->
+      <div class="card">
+        <div class="card-header-aa">
+          <i class="bi bi-grid me-2"></i>Accesos Rápidos
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{% url 'buscar_vuelos' %}" class="btn btn-aa">
+              <i class="bi bi-search me-2"></i>Buscar Vuelo
+            </a>
+            <a href="{% url 'lista_vuelos' %}" class="btn btn-outline-primary">
+              <i class="bi bi-airplane me-2"></i>Gestionar Vuelos
+            </a>
+            <a href="{% url 'lista_pasajeros' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-people me-2"></i>Ver Pasajeros
+            </a>
+            <a href="{% url 'panel_configuracion' %}" class="btn btn-outline-dark">
+              <i class="bi bi-sliders me-2"></i>Configuración
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- ══════ FIN COLUMNA DERECHA ══════ -->
+
+  </div>
+
+
+  <!-- ══════ RED DE DESTINOS ══════ -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header-aa">
+          <i class="bi bi-globe-americas me-2"></i>Red de Destinos
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+
+            {% for region, destinos in destinos_por_region.items %}
+            <div class="col-md-4 col-lg-3">
+              <h6 class="text-primary fw-bold mb-2">
+                <i class="bi bi-geo-alt-fill me-1"></i>{{ region }}
+              </h6>
+              <ul class="list-unstyled mb-0">
+                {% for d in destinos %}
+                <li class="small text-muted py-1 border-bottom">
+                  <i class="bi bi-dot me-1"></i>{{ d }}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% empty %}
+            <!-- Fallback estático si la BD está vacía -->
+            <div class="col-12">
+              <p class="text-muted text-center py-3">
+                <i class="bi bi-globe-americas fs-3 d-block mb-2"></i>
+                Carga la base de datos con <code>python script_bd.py</code> para ver los destinos.
+              </p>
+            </div>
+            {% endfor %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

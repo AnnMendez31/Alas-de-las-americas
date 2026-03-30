@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Geografía Aérea — Alas de las Américas{% endblock %}
+
+{% block extra_css %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header shadow-sm">
+    <div class="container">
+         <div class="m-4">
+      <a href="{% url 'panel_configuracion' %}" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="bi bi-globe-americas me-2"></i>Gestión Geográfica</h1>
+                <p class="lead mb-0">Configuración de destinos, terminales y divisiones políticas.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-3 px-4">
+            <ul class="nav nav-tabs nav-tabs-aa" id="adminTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="paises-tab" data-bs-toggle="tab" data-bs-target="#paises"
+                        type="button">
+                        <i class="bi bi-flag me-2"></i>Países
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="ciudades-tab" data-bs-toggle="tab" data-bs-target="#ciudades"
+                        type="button">
+                        <i class="bi bi-building me-2"></i>Ciudades
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="aeropuertos-tab" data-bs-toggle="tab" data-bs-target="#aeropuertos"
+                        type="button">
+                        <i class="bi bi-p-circle me-2"></i>Aeropuertos
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="adminTabContent">
+
+                <div class="tab-pane fade show active" id="paises" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0 text-dark">Directorio de Naciones</h5>
+                        <a href="{% url 'crear_pais' %}" class="btn btn-aa-gold px-3 shadow-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Nuevo País
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="150">Código ISO</th>
+                                    <th>Nombre del País</th>
+                                    <th class="text-end px-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in paises %}
+                                <tr>
+                                    <td><span class="code-badge">{{ p.codigo_iso }}</span></td>
+                                    <td class="fw-semibold text-dark">{{ p.nombre }}</td>
+                                    <td class="text-end px-4">
+                                        <a href="{% url 'editar_pais' p.pk %}"
+                                            class="btn-action bg-primary bg-opacity-10 text-primary me-1"
+                                            title="Editar">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'eliminar_pais' p.pk %}"
+                                            class="btn-action bg-danger bg-opacity-10 text-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">No hay países registrados.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="ciudades" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0 text-dark">Ciudades del Sistema</h5>
+                        <a href="{% url 'crear_ciudad' %}" class="btn btn-aa-gold px-3 shadow-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Nueva Ciudad
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ciudad</th>
+                                    <th>País de Origen</th>
+                                    <th class="text-end px-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in ciudades %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ c.nombre }}</div>
+                                        <small class="text-muted">ID: #{{ c.pk }}</small>
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-geo-alt text-secondary me-1"></i>{{ c.pais.nombre }}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <a href="{% url 'editar_ciudad' c.pk %}"
+                                            class="btn-action bg-primary bg-opacity-10 text-primary me-1">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'eliminar_ciudad' c.pk %}"
+                                            class="btn-action bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="aeropuertos" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0 text-dark">Aeropuertos del Sistema</h5>
+                        <a href="{% url 'crear_aeropuerto' %}" class="btn btn-aa-gold px-3 shadow-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Nuevo Aeropuerto
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Aeropuerto</th>
+                                    <th>Ciudad</th>
+                                    <th class="text-end px-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in aeropuertos %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ a.nombre }}</div>
+                                        <small class="text-muted">ID: #{{ a.pk }}</small>
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-geo-alt text-secondary me-1"></i>{{ a.ciudad.nombre }}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <a href="{% url 'editar_aeropuerto' a.pk %}"
+                                            class="btn-action bg-primary bg-opacity-10 text-primary me-1">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'eliminar_aeropuerto' a.pk %}"
+                                            class="btn-action bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración — Alas de las Américas{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<div class="page-header shadow-sm">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="bi bi-sliders2-vertical me-2"></i>Panel de Configuración</h1>
+                <p class="lead mb-0">Administra los parámetros globales y datos maestros del sistema aéreo.</p>
+            </div>
+            <div class="col-md-4 text-md-end d-none d-md-block">
+                <i class="bi bi-gear-wide-connected opacity-25" style="font-size: 4rem;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'lista_itinerarios' %}" class="text-decoration-none">
+                <div class="card h-100 config-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 text-dark fw-bold">Itinerarios</h5>
+                            <small class="text-muted">Gestión de horarios y rutas</small>
+                        </div>
+                        <div class="card-arrow">
+                            <i class="bi bi-chevron-right fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Configura las frecuencias de vuelo, horas de salida y asignación de aeronaves para cada ruta
+                        activa.
+                    </p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'panel_pais_ciudades_aeropuertos' %}" class="text-decoration-none">
+                <div class="card h-100 config-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">
+                            <i class="bi bi-globe-americas"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 text-dark fw-bold">Geografía Aérea</h5>
+                            <small class="text-muted">Países, Ciudades y Terminales</small>
+                        </div>
+                        <div class="card-arrow">
+                            <i class="bi bi-chevron-right fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Administra el catálogo de destinos globales, códigos IATA de aeropuertos y divisiones políticas.
+                    </p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'lista_vuelos' %}" class="text-decoration-none">
+                <div class="card h-100 config-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">
+                            <i class="bi bi-send"></i> 
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 text-dark fw-bold">Vuelos</h5>
+                            <small class="text-muted">Vuelos programados</small>
+                        </div>
+                        <div class="card-arrow">
+                            <i class="bi bi-chevron-right fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Administra los vuelos programados, horarios de salida y llegada, y asignación de aeronaves.
+                    </p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="{% url 'lista_aeronaves' %}" class="text-decoration-none">
+                <div class="card h-100 config-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">
+                            <i class="bi bi-airplane-engines"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 text-dark fw-bold">Aeronaves</h5>
+                            <small class="text-muted">Flota</small>
+                        </div>
+                        <div class="card-arrow">
+                            <i class="bi bi-chevron-right fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Administra el inventario de la flota, especificaciones técnicas y estado de las unidades.
+                    </p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-4">
+    <a href="{% url 'lista_tipos_equipaje' %}" class="text-decoration-none">
+        <div class="card h-100 config-card p-4">
+            <div class="d-flex align-items-center mb-3">
+                <div class="icon-box me-3">
+                    <i class="bi bi-luggage"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="mb-0 text-dark fw-bold">Tipos de Equipaje</h5>
+                    <small class="text-muted">Catálogo de equipaje</small>
+                </div>
+                <div class="card-arrow">
+                    <i class="bi bi-chevron-right fs-4"></i>
+                </div>
+            </div>
+            <p class="text-secondary small mb-0">
+                Define los tipos de equipaje disponibles (mano, bodega, deportivo) que se asignan a las tarifas.
+            </p>
+        </div>
+    </a>
+</div>
+
+    </div>
+
+    <div class="mt-5 p-4 bg-white rounded-4 shadow-sm border-start border-4 border-warning">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+            <div>
+                <h6 class="fw-bold mb-1">Nota de Seguridad</h6>
+                <p class="text-muted small mb-0">Los cambios realizados en este panel afectan directamente la
+                    disponibilidad de vuelos en tiempo real para los clientes finales.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

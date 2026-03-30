@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Vuelo — Alas de las Américas{% endblock %}
+
+{% block content %}
+<div class="page-header shadow-sm bg-dark text-white py-4 mb-4">
+    <div class="container">
+        <h1>
+            <i class="bi bi-eye me-2"></i>
+            Detalle del Vuelo {{ vuelo.numero_vuelo }}
+        </h1>
+        <p class="mb-0">
+            {{ vuelo.itinerario.origen.codigo_iata }} →
+            {{ vuelo.itinerario.destino.codigo_iata }}
+            | {{ vuelo.fecha_salida }}
+        </p>
+    </div>
+</div>
+
+<div class="container pb-5">
+
+    <!-- INFO GENERAL -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Aeronave:</strong><br>
+                    {{ vuelo.aeronave.matricula }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Modelo:</strong><br>
+                    {{ vuelo.aeronave.modelo.nombre }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Estado:</strong><br>
+                    {{ vuelo.get_estado_display }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Total pasajeros:</strong><br>
+                    <span class="badge bg-primary fs-6">{{ total_pasajeros }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA PASAJEROS -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">Pasajero</th>
+                        <th>Pasaporte</th>
+                        <th>Reserva</th>
+                        <th>Clase</th>
+                        <th>Asiento</th>
+                        <th>Cargo asiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in data_pasajeros %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong>{{ d.pasajero.nombre }} {{ d.pasajero.apellido }}</strong>
+                        </td>
+
+                        <td>{{ d.pasajero.numero_pasaporte }}</td>
+
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ d.reserva.codigo_reserva }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge bg-info text-dark">
+                                {{ d.tarifa.clase.nombre }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if d.asiento %}
+                                <span class="badge bg-success">
+                                    {{ d.asiento.fila }}{{ d.asiento.letra }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    Sin asignar
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if d.cargo_asiento > 0 %}
+                                <span class="text-danger fw-bold">
+                                    +{{ d.cargo_asiento }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Incluido</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-person-x text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2">No hay pasajeros en este vuelo.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BOTÓN VOLVER -->
+    <div class="mt-4">
+        <a href="{% url 'lista_vuelos' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+</div>
+{% endblock %}

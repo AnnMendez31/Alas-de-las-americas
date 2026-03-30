@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Buscar Vuelo — Alas de las Américas{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="text-center mb-5">
+    <h1 class="display-5 fw-bold">¿A dónde vamos hoy?</h1>
+    <p class="text-muted fs-5">Encuentra el vuelo perfecto entre nuestros destinos</p>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 p-md-5">
+
+          <form method="get" action="{% url 'buscar_vuelos' %}" id="form-busqueda">
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <!-- Tipo de viaje -->
+            <div class="d-flex gap-2 mb-4 flex-wrap" id="tipo-viaje-btns">
+              <button type="button" class="btn btn-tipo active" data-tipo="IDA">
+                ✈ Solo ida
+              </button>
+              <button type="button" class="btn btn-tipo" data-tipo="IDA_VUELTA">
+                ⇄ Ida y vuelta
+              </button>
+              <button type="button" class="btn btn-tipo" data-tipo="MULTIDESTINO">
+                ⊕ Multidestino
+              </button>
+            </div>
+            <input type="hidden" name="tipo_viaje" id="tipo_viaje_hidden" value="IDA">
+
+            <!-- Tramo 1 (siempre visible) -->
+            <div id="tramos-container">
+              <div class="tramo-bloque mb-3" data-tramo="0">
+                <div class="row g-3 align-items-end">
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold small">✈ Origen</label>
+                    {{ form.origen }}
+                    {% if form.origen.errors %}<div class="text-danger small">{{ form.origen.errors }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold small">🏁 Destino</label>
+                    {{ form.destino }}
+                    {% if form.destino.errors %}<div class="text-danger small">{{ form.destino.errors }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold small">📅 Fecha de salida</label>
+                    {{ form.fecha }}
+                    {% if form.fecha.errors %}<div class="text-danger small">{{ form.fecha.errors }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tramo de regreso (solo ida y vuelta) -->
+              <div id="bloque-regreso" class="tramo-bloque mb-3 d-none">
+                <div class="row g-3 align-items-end">
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-muted">Regreso — Origen</label>
+                    <select class="form-select" disabled id="regreso-origen-display">
+                      <option>← Se invierte automáticamente</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold small text-muted">Regreso — Destino</label>
+                    <select class="form-select" disabled>
+                      <option>← Se invierte automáticamente</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold small">📅 Fecha de regreso</label>
+                    {{ form.fecha_regreso }}
+                    {% if form.fecha_regreso.errors %}<div class="text-danger small">{{ form.fecha_regreso.errors }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tramos extra (multidestino, generados por JS) -->
+              <div id="tramos-extra"></div>
+            </div>
+
+            <!-- Botón agregar tramo (solo multidestino) -->
+            <div id="btn-agregar-tramo" class="d-none mb-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm rounded-3"
+                      onclick="agregarTramo()">
+                + Agregar otro destino
+              </button>
+            </div>
+
+            <!-- Pasajeros y submit -->
+            <div class="row g-3 align-items-end mt-1">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">👤 Pasajeros</label>
+                {{ form.num_pasajeros }}
+              </div>
+              <div class="col-md-8">
+                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3">
+                  Buscar vuelos disponibles
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Destinos populares -->
+  <div class="mt-5">
+    <h5 class="text-center text-muted mb-4">Destinos populares</h5>
+    <div class="row g-3 justify-content-center">
+      {% for ciudad in destinos_default %}
+        <div class="col-6 col-md-3 col-lg-2 text-center">
+          <div class="p-3 rounded-3 bg-light">
+            <div class="fw-semibold small">{{ ciudad }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-tipo {
+  border: 2px solid #dee2e6;
+  background: white;
+  color: #495057;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 0.9rem;
+  transition: all .2s;
+}
+.btn-tipo.active {
+  border-color: #0d6efd;
+  background: #0d6efd;
+  color: white;
+}
+.tramo-bloque {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+}
+.btn-quitar-tramo {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: none; border: none;
+  color: #adb5bd; font-size: 1.2rem; cursor: pointer;
+}
+.btn-quitar-tramo:hover { color: #dc3545; }
+</style>
+
+<script>
+// ── Selección de aeropuertos como objeto para clonar opciones ──
+const aeropuertosOpts = `{{ aeropuertos_opts|safe }}`;
+
+let tramoCount = 1;
+
+// Tipo de viaje
+document.querySelectorAll('.btn-tipo').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.btn-tipo').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const tipo = this.dataset.tipo;
+    document.getElementById('tipo_viaje_hidden').value = tipo;
+
+    document.getElementById('bloque-regreso').classList.toggle('d-none', tipo !== 'IDA_VUELTA');
+    document.getElementById('btn-agregar-tramo').classList.toggle('d-none', tipo !== 'MULTIDESTINO');
+
+    // Limpiar tramos extra al cambiar tipo
+    if (tipo !== 'MULTIDESTINO') {
+      document.getElementById('tramos-extra').innerHTML = '';
+      tramoCount = 1;
+    }
+  });
+});
+
+// Agregar tramo (multidestino)
+function agregarTramo() {
+  const idx = tramoCount++;
+  const div = document.createElement('div');
+  div.className = 'tramo-bloque mb-3';
+  div.dataset.tramo = idx;
+  div.innerHTML = `
+    <button type="button" class="btn-quitar-tramo" onclick="this.closest('.tramo-bloque').remove()">✕</button>
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold small">✈ Origen</label>
+        <select name="tramo_${idx}_origen" class="form-select" required>
+          <option value="">Selecciona origen...</option>
+          ${aeropuertosOpts}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold small">🏁 Destino</label>
+        <select name="tramo_${idx}_destino" class="form-select" required>
+          <option value="">Selecciona destino...</option>
+          ${aeropuertosOpts}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold small">📅 Fecha</label>
+        <input type="date" name="tramo_${idx}_fecha" class="form-control" required>
+      </div>
+    </div>
+  `;
+  document.getElementById('tramos-extra').appendChild(div);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+
+# Variables de entorno (contiene contraseñas)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Django
+*.sqlite3
+staticfiles/
+mediafiles/
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker (datos locales)
+sqlserver_data/
